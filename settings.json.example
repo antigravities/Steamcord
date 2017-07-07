@@ -1,0 +1,13 @@
+{
+	"steam": {
+		"accountName": "",
+		"password": ""
+	},
+	"discord": {
+		"key": "",
+		"hookID": "",
+		"hookSecret": "",
+		"master": "",
+		"masterGuild": ""
+	}
+}
