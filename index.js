@@ -133,6 +133,7 @@ discord.on("message", (msg) => {
 							else states.push("Offline");
 						} else {
 							if( steam.myFriends[id] == Steam.Steam.EFriendRelationship.RequestRecipient ) states.push("Added you as a friend");
+							else if ( steam.myFriends[id] == Steam.Steam.EFriendRelationship.Ignored ) states.push("Blocked");
 							else states.push("??");
 						}
 					});
