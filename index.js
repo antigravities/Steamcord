@@ -88,7 +88,12 @@ discord.on("message", (msg) => {
 				}, k*5000);
 			});
 		} else if( mc[0] == "a" && mc.length >= 2 ){
-			steam.addFriend(mc[1]);
+			try{
+				steam.addFriend(mc[1]);
+			} catch (err){
+				msg.reply("that's not a valid Steam ID!");
+				return;
+			}
 			webhook.send("Added friend", { username: "Steam Friends", avatarURL: "https://eet.li/7fd7e03.png" });
 		} else if( mc[0] == "f" ) {
 			var friends = Object.keys(steam.myFriends);
