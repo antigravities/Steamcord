@@ -68,7 +68,11 @@ discord.on("message", (msg) => {
 		var mc = msg.content.slice(1).split(" ");
 
 		if( mc[0] == "p" && mc.length >= 3 ){
-			steam.chatMessage(mc[1], mc.slice(2).join(" "));
+			try{
+				steam.chatMessage(mc[1], mc.slice(2).join(" "));
+			} catch (err){
+				msg.reply("that's not a valid Steam ID!");
+			}
 		} else if( mc[0] == "r" && mc.length >= 2 ){
 			mc.slice(1).forEach(function(v,k){
 				setTimeout(function(){
