@@ -67,4 +67,5 @@ To run Steamcord, just `cd` into wherever you cloned or downloaded Steamcord and
 * You're free to make feature requests, but I'm also free to not consider them.
 
 ## License
+
 [GPL v3](http://gnu.org/licenses/gpl-3.0) (yeah, that one)
