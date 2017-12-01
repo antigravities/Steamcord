@@ -55,7 +55,10 @@ To run Steamcord, just `cd` into wherever you cloned or downloaded Steamcord and
 * `!f` - Display your friends list
 * `!r <steamkey>` - Redeem a Steam CD key
 * `!a <steamid>` - Add a user as a friend on Steam
-* `!w` - Obtain your Steam Web session cookies
+* `!w` - Obtain your Steam Community session cookies
+* `!p` - Enable PICS notifications. This will send you new changelists for all apps.
+* `!q <appid>` - Enable PICS notifications for `<appid>`. This will send you changelists for apps that are on this list.
+* `!o <appid>` - Check if you own `<appid>`.
 
 ## Maintainers
 

@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const discord = new Discord.Client();
 
 const Steam = require("steam-user");
-const steam = new Steam();
+const steam = new Steam({ enablePicsCache: true, picsCacheAll: true, changelistUpdateInterval: 5000 });
 
 const fs = require("fs");
 
@@ -23,6 +23,14 @@ if( ! fs.existsSync("hooks.json") ){
 }
 
 var hooks = JSON.parse(fs.readFileSync("hooks.json"));
+
+if( ! fs.existsSync("pics.json") ){
+	fs.writeFileSync("pics.json", "{\"apps\": []}");
+}
+
+var pics = JSON.parse(fs.readFileSync("pics.json"));
+
+var safeAppCall = false;
 
 var resetTimeout = null;
 var steamUpdateTimeout = null;
@@ -60,6 +68,7 @@ discord.on("ready", () => {
 		if( tradeOffers > 0 ) topic+=" | " + tradeOffers + " pending trade offers";
 		if( newItemNotifications > 0 ) topic+=" | " + newItemNotifications + " new items";
 		if( offlineMessages > 0 ) topic+=" | " + offlineMessages + " offline messages";
+		if( ( pics.enabled || pics.apps.length > 0 ) && pics.cl ) topic+=" | Changelist " + pics.cl;
 		masterGuild.channels.find("name", "general").setTopic(topic);
 	}, 30000);
 
@@ -201,6 +210,29 @@ discord.on("message", (msg) => {
 		} else if( mc[0] == "w" ) {
 			expectingWebSession=true;
 			steam.webLogOn();
+		} else if( mc[0] == "p" ) {
+			if( ! pics.enabled ) pics.enabled = true;
+			else pics.enabled = false;
+
+			fs.writeFileSync("pics.json", JSON.stringify(pics));
+
+			webhook.send("PICS updates " + (pics.enabled ? "enabled" : "disabled") + ".", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png" });
+		} else if( mc[0] == "q" ) {
+			if( isNaN(parseInt(mc[1])) ) return webhook.send("Invalid AppID", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png"});
+
+			var l = parseInt(mc[1]);
+
+			if( pics.apps.indexOf(l) < 0 ) pics.apps.push(parseInt(mc[1]));
+			else pics.apps.splice(pics.apps.indexOf(l), 1);
+
+			fs.writeFileSync("pics.json", JSON.stringify(pics));
+
+			webhook.send(((pics.apps.indexOf(l)) < 0 ? "No longer" : "Now") + " monitoring " + mc[1] + ".", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png"});
+		} else if( mc[0] == "o" ){
+			if( ! safeAppCall ) return webhook.send("Please wait one moment while Steamcord retrieves your apps.", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
+			if( isNaN(parseInt(mc[1])) ) return webhook.send("Invalid AppID", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
+
+			return webhook.send("You do" + ( steam.ownsApp(parseInt(mc[1])) ? "" : " not" ) + " own " + mc[1] + ".", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 		} else {
 			msg.reply("??");
 		}
@@ -284,6 +316,62 @@ steam.on("webSession", (sessionid, cookies) => {
 	if( expectingWebSession ){
 		webhook.send(cookies.join("\n"), { username: "Steam Community", avatarURL: "https://eet.li/7fd7e03.png" });
 		expectingWebSession = false;
+	}
+});
+
+steam.on("appOwnershipCached", () => {
+	safeAppCall = true;
+});
+
+steam.on("changelist", (cl, apps, subs) => {
+	pics.cl = cl;
+	fs.writeFileSync("pics.json", JSON.stringify(pics));
+
+	var interested = false;
+
+	apps.forEach((v) => {
+		if( pics.apps.indexOf(v) > -1 ) interested = true;
+	})
+
+	if( pics.enabled || interested ){
+		steam.getProductInfo(apps, subs, (apps, subs, unkApps, unkSubs) => {
+			var msg = "Changelist " + cl + " | ";
+
+			if( Object.keys(apps).length > 0 ){
+
+				msg += Object.keys(apps).length + " apps: ";
+
+				var m = [];
+
+				Object.keys(apps).forEach((v) => {
+					if( ! apps[v].appinfo.common ) m.push("Unknown App " + v);
+					else m.push(apps[v].appinfo.common.name + " (" + v + ")");
+				});
+
+				msg += m.join(", ");
+
+				if( (Object.keys(subs).length + Object.keys(unkSubs).length) > 0 ) msg+=" | ";
+
+			}
+
+			if( Object.keys(subs).length > 0 || Object.keys(unkSubs).length > 0 ){
+				msg += (Object.keys(subs).length+Object.keys(unkSubs).length) + " subscriptions: ";
+
+				var m = [];
+
+				Object.keys(unkSubs).forEach((v) => {
+					m.push(v);
+				});
+
+				Object.keys(subs).forEach((v) => {
+					m.push(v);
+				});
+
+				msg += m.join(", ");
+			}
+
+			webhook.send(msg, { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png" });
+		});
 	}
 });
 
