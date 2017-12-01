@@ -8,11 +8,15 @@ const fs = require("fs");
 
 const settings = JSON.parse(fs.readFileSync("settings.json"));
 
+const emojiStrip = require("emoji-strip");
+
 var lastSender = null;
 
 const webhook = new Discord.WebhookClient(settings.discord.hookID, settings.discord.hookSecret);
 
 var masterGuild = null;
+
+var expectingWebSession = false;
 
 if( ! fs.existsSync("hooks.json") ){
 	fs.writeFileSync("hooks.json", "{}");
@@ -21,6 +25,7 @@ if( ! fs.existsSync("hooks.json") ){
 var hooks = JSON.parse(fs.readFileSync("hooks.json"));
 
 var resetTimeout = null;
+var steamUpdateTimeout = null;
 
 var newCommentNotifications = 0;
 var newItemNotifications = 0;
@@ -30,18 +35,19 @@ var offlineMessages = 0;
 function resolveCode(e, code){
 	var res = "";
 
-	Object.keys(e).forEach(function(v){
+	Object.keys(e).forEach((v) => {
 		if( e[v] == code ) res = v;
 	});
 
 	return res;
 }
+
 discord.on("ready", () => {
 	masterGuild = discord.guilds.find("id", settings.discord.masterGuild);
 
 	if( resetTimeout != null ) clearInterval(resetTimeout);
 
-	resetTimeout = setInterval(function(){
+	resetTimeout = setInterval(() => {
 		var greetings = [ "Hey, {{name}}!", "Hi, {{name}}!", "How's it going, {{name}}?", "How are you doing, {{name}}?", "What's up, {{name}}?", "What's new, {{name}}?", "How's everything, {{name}}?", "Great to see you, {{name}}!", "Good to see you, {{name}}!", "Nice to see you, {{name}}!", "Yo, {{name}}!", "Howdy, {{name}}!", "'Sup, {{name}}?", "Whazzup, {{name}}?", "Hiya, {{name}}!", "Aloha, {{name}}!", "Guten tag, {{name}}!", "Bonjour, {{name}}!", "Ni-hao, {{name}}!", "Hola, {{name}}!" ];
 
 		var topic = "";
@@ -56,6 +62,39 @@ discord.on("ready", () => {
 		if( offlineMessages > 0 ) topic+=" | " + offlineMessages + " offline messages";
 		masterGuild.channels.find("name", "general").setTopic(topic);
 	}, 30000);
+
+	if( steamUpdateTimeout != null ) clearInterval(steamUpdateTimeout);
+
+	steamUpdateTimeout = setInterval(() => {
+		var master = discord.users.find("id", settings.discord.master);
+
+		var ps;
+
+		switch(master.presence.status){
+			case "online":
+				ps = Steam.Steam.EPersonaState.Online;
+				break;
+			case "idle":
+				ps = Steam.Steam.EPersonaState.Away;
+				break;
+			case "dnd":
+				ps = Steam.Steam.EPersonaState.Busy;
+				break;
+			default:
+				ps = Steam.Steam.EPersonaState.Snooze;
+				break;
+		}
+
+		steam.setPersona(ps);
+
+		if( master.presence.game !== null ){
+			var gn = master.presence.game.name;
+			if( master.presence.streaming ) gn = "Streaming " + gn;
+			steam.gamesPlayed(gn);
+		} else {
+			steam.gamesPlayed([]);
+		}
+	}, 5000);
 
 	console.log("Logged on to Discord.");
 });
@@ -74,12 +113,12 @@ discord.on("message", (msg) => {
 				msg.reply("that's not a valid Steam ID!");
 			}
 		} else if( mc[0] == "r" && mc.length >= 2 ){
-			mc.slice(1).forEach(function(v,k){
-				setTimeout(function(){
-					steam.redeemKey(v, function(r, d, p){
+			mc.slice(1).forEach((v,k) => {
+				setTimeout(() => {
+					steam.redeemKey(v, (r, d, p) => {
 						var subs = [];
 						if( p != null && typeof p == "object" ){
-							Object.keys(p).forEach(function(v,k){
+							Object.keys(p).forEach((v,k) => {
 								subs.push(p[v] + " (" + v + ")");
 							});
 						}
@@ -99,38 +138,38 @@ discord.on("message", (msg) => {
 			var friends = Object.keys(steam.myFriends);
 			var i = 0;
 			var embeds = [];
-			
-			friends.forEach(function(v,k){
+
+			friends.forEach((v,k) => {
 				// blocked? don't care
 				if( steam.myFriends[v] == Steam.Steam.EFriendRelationship.Ignored ){
 					friends.splice(k, 1);
 				}
 			});
-			
+
 			var mFriends = friends.length;
-			
+
 			do {
 				i++;
-				
+
 				var embed = new Discord.RichEmbed()
 					.setColor(0x00AE86)
 					.setAuthor("Steam Friend List", "https://eet.li/7fd7e03.png");
-					
+
 					var nicks = [];
 					var steamids = [];
 					var states = [];
-					
-					friends.forEach(function(v){
+
+					friends.forEach((v) => {
 						var id = friends.shift()
-						
+
 						try {
-							nicks.push(steam.users[id].player_name);
+							nicks.push(emojiStrip(steam.users[id].player_name));
 						} catch(e) {
 							nicks.push(id);
 						}
-						
+
 						steamids.push(id);
-						
+
 						if( steam.myFriends[id] == Steam.Steam.EFriendRelationship.Friend ){
 							if( steam.users[id].persona_state == Steam.Steam.EPersonaState.Offline ) states.push("Offline");
 							else if( steam.users[id].persona_state == Steam.Steam.EPersonaState.Online ) states.push("Online");
@@ -146,18 +185,18 @@ discord.on("message", (msg) => {
 							else states.push("??");
 						}
 					});
-					
+
 					nicks = nicks.join("\n");
 					steamids = steamids.join("\n");
 					states = states.join("\n");
-					
+
 					embed.addField("Persona Name", nicks, true);
 					embed.addField("SteamID64", steamids, true);
 					embed.addField("Status", states, true);
-					
+
 					embeds.push(embed);
 			} while( friends.length > 25);
-			
+
 			webhook.send("", {username: "Steam Friends", avatarURL: "https://eet.li/7fd7e03.png", embeds: embeds } );
 		} else {
 			msg.reply("??");
@@ -199,7 +238,7 @@ steam.on("friendMessage", (sender, message) => {
 	}
 });
 
-steam.on("friendRelationship", function(sender, relationship){
+steam.on("friendRelationship", (sender, relationship) => {
 	var msg = "";
 	try {
 		msg = steam.users[sender].player_name + " (" + sender + ") ";
@@ -222,20 +261,24 @@ steam.on("friendRelationship", function(sender, relationship){
 	webhook.send(msg, { username: "Steam Friends", avatarURL: "https://eet.li/7fd7e03.png" });
 });
 
-steam.on("newItems", function(count){
+steam.on("newItems", (count) => {
 	newItemNotifications = count;
 });
 
-steam.on("newComments", function(count){
+steam.on("newComments", (count) => {
 	newCommentNotifications = count;
 });
 
-steam.on("tradeOffers", function(count){
+steam.on("tradeOffers", (count) => {
 	tradeOffers = count;
 });
 
-steam.on("offlineMessages", function(count){
+steam.on("offlineMessages", (count) => {
 	offlineMessages = count;
+});
+
+process.on("uncaughtException", (e) => {
+	webhook.send("Uncaught exception: " + e, { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 });
 
 steam.logOn(settings.steam);
