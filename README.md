@@ -55,6 +55,7 @@ To run Steamcord, just `cd` into wherever you cloned or downloaded Steamcord and
 * `!f` - Display your friends list
 * `!r <steamkey>` - Redeem a Steam CD key
 * `!a <steamid>` - Add a user as a friend on Steam
+* `!w` - Obtain your Steam Web session cookies
 
 ## Maintainers
 

@@ -198,6 +198,9 @@ discord.on("message", (msg) => {
 			} while( friends.length > 25);
 
 			webhook.send("", {username: "Steam Friends", avatarURL: "https://eet.li/7fd7e03.png", embeds: embeds } );
+		} else if( mc[0] == "w" ) {
+			expectingWebSession=true;
+			steam.webLogOn();
 		} else {
 			msg.reply("??");
 		}
@@ -275,6 +278,13 @@ steam.on("tradeOffers", (count) => {
 
 steam.on("offlineMessages", (count) => {
 	offlineMessages = count;
+});
+
+steam.on("webSession", (sessionid, cookies) => {
+	if( expectingWebSession ){
+		webhook.send(cookies.join("\n"), { username: "Steam Community", avatarURL: "https://eet.li/7fd7e03.png" });
+		expectingWebSession = false;
+	}
 });
 
 process.on("uncaughtException", (e) => {
