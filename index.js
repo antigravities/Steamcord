@@ -35,6 +35,8 @@ var safeAppCall = false;
 var resetTimeout = null;
 var steamUpdateTimeout = null;
 
+var typingIntervals = {};
+
 var newCommentNotifications = 0;
 var newItemNotifications = 0;
 var tradeOffers = 0;
@@ -252,12 +254,26 @@ discord.on("message", (msg) => {
 
 			steam.setUIMode(uiMode);
 			return webhook.send("Set UI mode to " + mc[1] + ".", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
+		} else if( mc[0] == "l" ){
+			if( isNaN(parseInt(mc[1])) ) return webhook.send("Please specify a valid AppID to request a free on demand/no cost license for.", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png" });
+
+			steam.requestFreeLicense(parseInt(mc[1]), (err, subs, apps) => {
+				if( err ) return webhook.send("Error: " + err, { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png" });
+
+				return webhook.send("OK! You were granted subscription(s) " + subs.join(",") + " which contained app(s) " + apps.join(","), { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
+			});
 		} else {
 			msg.reply("??");
 		}
 	} else {
 		if( msg.channel.name != "general" ) steam.chatMessage(msg.channel.name, msg.content);
 	}
+});
+
+discord.on("typingStart", (chan, user) => {
+	if( chan.name == "general" ) return;
+
+	steam.chatTyping(chan.name);
 });
 
 discord.login(settings.discord.key);
@@ -290,6 +306,20 @@ steam.on("friendMessage", (sender, message) => {
 
 		lastSender = sender;
 	}
+});
+
+steam.on("friendTyping", (sender) => {
+	var chan = masterGuild.channels.find("name", sender.toString());
+
+	if( chan === null ) return;
+
+	if( typingIntervals[sender.toString()] ) clearTimeout(typingIntervals[sender.toString()]);
+
+	chan.startTyping();
+
+	setTimeout(() => {
+		chan.stopTyping();
+	}, 30000);
 });
 
 steam.on("friendRelationship", (sender, relationship) => {
