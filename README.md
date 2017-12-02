@@ -61,6 +61,8 @@ To run Steamcord, just `cd` into wherever you cloned or downloaded Steamcord and
 * `!o <appid>` - Check if you own `<appid>`.
 * `!b [bigpic|mobile|web|none]` - Sets your UI mode (the icon next to your name). Set to "none" to reset. Not persistent across reboots.
 * `!l <appid>` - Obtain a free on demand/no cost license for `<appid>`. See [this](https://github.com/DoctorMcKay/node-steam-user#requestfreelicenseappids-callback) for more information.
+* `!j <chatid>` - Join a group chat
+* `!m <chatid>` - Leave a group chat
 
 ## Maintainers
 
