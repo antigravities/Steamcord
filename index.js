@@ -52,6 +52,52 @@ function resolveCode(e, code){
 	return res;
 }
 
+function sendMessageAs(sender, message, chatRoom){
+	var isGroup = chatRoom ? true : false;
+	var profile = tryGetProfile(sender);
+
+	var roomID = (isGroup ? chatRoom.toString() : sender.toString())
+
+	if( masterGuild.channels.find("name", roomID) === null ){
+		masterGuild.createChannel(roomID, "text").then((ch) => {
+			ch.setTopic((isGroup ? steam.chats[chatRoom].name : profile.name)).then((ch) => {
+
+				ch.createWebhook("Steam2Discord", "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/f2/f2742c1750ecafc18c6c777ee4897accc61093e8_medium.jpg").then((webhook) => {
+					hooks[roomID] = {};
+					hooks[roomID].webhookID = webhook.id;
+					hooks[roomID].webhookToken = webhook.token;
+					fs.writeFileSync("hooks.json", JSON.stringify(hooks));
+					webhook.send(message, { username: profile.name, avatarURL: profile.avatar } );
+				});
+			});
+		});
+	} else {
+		var hook = new Discord.WebhookClient(hooks[roomID].webhookID, hooks[roomID].webhookToken);
+
+		masterGuild.channels.find("name", roomID).setTopic((isGroup ? steam.chats[chatRoom].name : profile.name));
+
+		hook.send(message, {username: profile.name, avatarURL: profile.avatar });
+	}
+}
+
+function tryGetProfile(steamid){
+	var profile = {};
+
+	try {
+		profile.name = steam.users[steamid].player_name;
+	} catch(e){
+		profile.name = sender.toString();
+	}
+
+	try {
+		profile.avatar = steam.users[steamid].avatar_url_full;
+	} catch(e){
+		profile.avatar = "http://cdn.edgecast.steamstatic.com/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
+	}
+
+	return profile;
+}
+
 discord.on("ready", () => {
 	masterGuild = discord.guilds.find("id", settings.discord.masterGuild);
 
@@ -83,16 +129,16 @@ discord.on("ready", () => {
 
 		switch(master.user.presence.status){
 			case "online":
-				ps = Steam.Steam.EPersonaState.Online;
+				ps = Steam.EPersonaState.Online;
 				break;
 			case "idle":
-				ps = Steam.Steam.EPersonaState.Away;
+				ps = Steam.EPersonaState.Away;
 				break;
 			case "dnd":
-				ps = Steam.Steam.EPersonaState.Busy;
+				ps = Steam.EPersonaState.Busy;
 				break;
 			default:
-				ps = Steam.Steam.EPersonaState.Snooze;
+				ps = Steam.EPersonaState.Snooze;
 				break;
 		}
 
@@ -133,9 +179,9 @@ discord.on("message", (msg) => {
 								subs.push(p[v] + " (" + v + ")");
 							});
 						}
-						webhook.send("Key: " + v + " | Result: " + resolveCode(Steam.Steam.EResult, r) + " | Purchase information: " + resolveCode(Steam.EPurchaseResult, d) + " | Subs: " + subs.join(", "), { username: "Redeem Key", avatarURL: "https://eet.li/eb8e443.png" } );
+						webhook.send("Key: " + v + " | Result: " + resolveCode(Steam.EResult, r) + " | Purchase information: " + resolveCode(Steam.EPurchaseResult, d) + " | Subs: " + subs.join(", "), { username: "Redeem Key", avatarURL: "https://eet.li/eb8e443.png" } );
 					});
-				}, k*5000);
+				}, k*1000);
 			});
 		} else if( mc[0] == "a" && mc.length >= 2 ){
 			try{
@@ -152,7 +198,7 @@ discord.on("message", (msg) => {
 
 			friends.forEach((v,k) => {
 				// blocked? don't care
-				if( steam.myFriends[v] == Steam.Steam.EFriendRelationship.Ignored ){
+				if( steam.myFriends[v] == Steam.EFriendRelationship.Ignored ){
 					friends.splice(k, 1);
 				}
 			});
@@ -181,18 +227,18 @@ discord.on("message", (msg) => {
 
 						steamids.push(id);
 
-						if( steam.myFriends[id] == Steam.Steam.EFriendRelationship.Friend ){
-							if( steam.users[id].persona_state == Steam.Steam.EPersonaState.Offline ) states.push("Offline");
-							else if( steam.users[id].persona_state == Steam.Steam.EPersonaState.Online ) states.push("Online");
-							else if( steam.users[id].persona_state == Steam.Steam.EPersonaState.Busy ) states.push("Busy");
-							else if( steam.users[id].persona_state == Steam.Steam.EPersonaState.Away ) states.push("Away");
-							else if( steam.users[id].persona_state == Steam.Steam.EPersonaState.Snooze ) states.push("Snooze");
-							else if( steam.users[id].persona_state == Steam.Steam.EPersonaState.LookingToPlay ) states.push("Looking to Play");
-							else if( steam.users[id].persona_state == Steam.Steam.EPersonaState.LookingToTrade ) states.push("Looking to Trade");
+						if( steam.myFriends[id] == Steam.EFriendRelationship.Friend ){
+							if( steam.users[id].persona_state == Steam.EPersonaState.Offline ) states.push("Offline");
+							else if( steam.users[id].persona_state == Steam.EPersonaState.Online ) states.push("Online");
+							else if( steam.users[id].persona_state == Steam.EPersonaState.Busy ) states.push("Busy");
+							else if( steam.users[id].persona_state == Steam.EPersonaState.Away ) states.push("Away");
+							else if( steam.users[id].persona_state == Steam.EPersonaState.Snooze ) states.push("Snooze");
+							else if( steam.users[id].persona_state == Steam.EPersonaState.LookingToPlay ) states.push("Looking to Play");
+							else if( steam.users[id].persona_state == Steam.EPersonaState.LookingToTrade ) states.push("Looking to Trade");
 							else states.push("Offline");
 						} else {
-							if( steam.myFriends[id] == Steam.Steam.EFriendRelationship.RequestRecipient ) states.push("Added you as a friend");
-							else if ( steam.myFriends[id] == Steam.Steam.EFriendRelationship.Ignored ) states.push("Blocked");
+							if( steam.myFriends[id] == Steam.EFriendRelationship.RequestRecipient ) states.push("Added you as a friend");
+							else if ( steam.myFriends[id] == Steam.EFriendRelationship.Ignored ) states.push("Blocked");
 							else states.push("??");
 						}
 					});
@@ -262,6 +308,20 @@ discord.on("message", (msg) => {
 
 				return webhook.send("OK! You were granted subscription(s) " + subs.join(",") + " which contained app(s) " + apps.join(","), { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 			});
+		} else if( mc[0] == "j" ){
+			try {
+				steam.joinChat(mc[1], (res) => {
+					if( res != Steam.EResult.OK ) return webhook.send("Could not join that chat room: " + resolveCode(Steam.EResult, res));
+				});
+			} catch(e){
+				return webhook.send("Could not join that chat room: " + e);
+			}
+		} else if( mc[0] == "m" ){
+			try {
+				steam.leaveChat(mc[1]);
+			} catch(e){
+				return webhook.send("Could not leave that chat room: " + e);
+			}
 		} else {
 			msg.reply("??");
 		}
@@ -279,33 +339,12 @@ discord.on("typingStart", (chan, user) => {
 discord.login(settings.discord.key);
 
 steam.on("loggedOn", () => {
-	steam.setPersona(Steam.Steam.EPersonaState.Online);
+	steam.setPersona(Steam.EPersonaState.Online);
 	console.log("Logged on to Steam.");
 });
 
-steam.on("friendMessage", (sender, message) => {
-	if( masterGuild.channels.find("name", sender.toString()) === null ){
-		masterGuild.createChannel(sender.toString(), "text").then((ch) => {
-			ch.setTopic(steam.users[sender].player_name).then((ch) => {
-				ch.createWebhook("Steam2Discord", "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/f2/f2742c1750ecafc18c6c777ee4897accc61093e8_medium.jpg").then((webhook) => {
-					hooks[sender] = {};
-					hooks[sender].webhookID = webhook.id;
-					hooks[sender].webhookToken = webhook.token;
-					fs.writeFileSync("hooks.json", JSON.stringify(hooks));
-					webhook.send(message, { username: steam.users[sender].player_name, avatarURL: steam.users[sender].avatar_url_full} );
-					lastSender = sender;
-				});
-			});
-		});
-	} else {
-		var hook = new Discord.WebhookClient(hooks[sender].webhookID, hooks[sender].webhookToken);
-
-		masterGuild.channels.find("name", sender.toString()).setTopic(steam.users[sender].player_name);
-
-		hook.send(message, {username: steam.users[sender].player_name, avatarURL: steam.users[sender].avatar_url_full});
-
-		lastSender = sender;
-	}
+steam.on("friendMessage", (sender, message, room) => {
+	sendMessageAs(sender, message, null);
 });
 
 steam.on("friendTyping", (sender) => {
@@ -323,26 +362,23 @@ steam.on("friendTyping", (sender) => {
 });
 
 steam.on("friendRelationship", (sender, relationship) => {
-	var msg = "";
-	try {
-		msg = steam.users[sender].player_name + " (" + sender + ") ";
-	} catch(e){
-		msg = sender + " ";
-	}
+	var profile = tryGetProfile(sender);
 
-	if( relationship == Steam.Steam.EFriendRelationship.None ){
+	var msg = "\*\* " + profile.name + " ";
+
+	if( relationship == Steam.EFriendRelationship.None ){
 		msg+= "❌ removed you.";
-	} else if( relationship == Steam.Steam.EFriendRelationship.RequestRecipient ){
+	} else if( relationship == Steam.EFriendRelationship.RequestRecipient ){
 		msg+= "✅ sent a friend invite.";
-	} else if( relationship == Steam.Steam.EFriendRelationship.Friend ){
+	} else if( relationship == Steam.EFriendRelationship.Friend ){
 		msg+= "✅ is now your friend.";
-	} else if( relationship == Steam.Steam.EFriendRelationship.Ignored || relationship == Steam.Steam.EFriendRelationship.IgnoredFriend ){
+	} else if( relationship == Steam.EFriendRelationship.Ignored || relationship == Steam.EFriendRelationship.IgnoredFriend ){
 		msg+="❌ ignored you.";
-	} else if( relationship == Steam.Steam.EFriendRelationship.Blocked ){
+	} else if( relationship == Steam.EFriendRelationship.Blocked ){
 		msg+="❌ blocked you.";
 	}
 
-	webhook.send(msg, { username: "Steam Friends", avatarURL: "https://eet.li/7fd7e03.png" });
+	sendMessageAs(sender, msg);
 });
 
 steam.on("newItems", (count) => {
@@ -370,6 +406,69 @@ steam.on("webSession", (sessionid, cookies) => {
 
 steam.on("appOwnershipCached", () => {
 	safeAppCall = true;
+});
+
+steam.on("tradeRequest", (sender, respond) => {
+	var profile = tryGetProfile(sender);
+	sendMessageAs(sender, "\*\* " + sender.name + " sent a trade request.");
+});
+
+steam.on("groupAnnouncement", (sender, headline, gid) => {
+	webhook.send(headline + "\n<https://steamcommunity.com/gid/" + sender.toString() + "/announcements/detail/" + gid + ">", { username: steam.groups[sender].name_info.clan_name + " (Group Announcement)", avatarURL: "https://eet.li/7fd7e03.png" });
+});
+
+steam.on("chatMessage", (room, chatter, message) => {
+	if( chatter.accountid == steam.steamID.accountid ) return;
+	sendMessageAs(chatter, message, room);
+});
+
+steam.on("chatUserJoined", (room, chatter) => {
+	sendMessageAs(chatter, "\*\* joined", room);
+});
+
+steam.on("chatUserLeft", (room, chatter) => {
+	sendMessageAs(chatter, "\*\* left", room);
+});
+
+steam.on("chatUserDisconnected", (room, chatter) => {
+	sendMessageAs(chatter, "\*\* disconnected", room);
+});
+
+steam.on("chatUserKicked", (room, chatter, actor) => {
+	var profile = tryGetProfile(actor);
+
+	sendMessageAs(chatter, "\*\* was kicked by " + profile.name + " (" + actor + ")", room);
+});
+
+steam.on("chatUserBanned", (room, chatter, actor) => {
+	var profile = tryGetProfile(actor);
+
+	sendMessageAs(chatter, "\*\* was banned by " + profilename + " (" + actor + ")", room);
+});
+
+steam.on("chatSetPublic", (room, actor) => {
+	sendMessageAs(actor, "\*\* unlocked the chat", room);
+});
+
+steam.on("chatSetPrivate", (room, actor) => {
+	sendMessageAs(actor, "\*\* locked the chat", room);
+});
+
+steam.on("chatSetOfficersOnly", (room, actor) => {
+	sendMessageAs(actor, "\*\* made it so that only officers can speak", room);
+});
+
+steam.on("chatUnsetOfficersOnly", (room, actor) => {
+	sendMessageAs(actor, "\*\* made it so that anyone can speak", room);
+});
+
+steam.on("chatEnter", (room, resp) => {
+	if( resp != Steam.EChatRoomEnterResponse.Success ) return webhook.send("Could not join that chat: " + resolveCode(Steam.EChatRoomEnterResponse, resp));
+	else sendMessageAs(steam.steamID, "\*\* joined the chat", room);
+});
+
+steam.on("chatLeft", (room) => {
+	sendMessageAs(steam.steamID, "\*\* left the chat", room);
 });
 
 steam.on("changelist", (cl, apps, subs) => {
@@ -425,7 +524,7 @@ steam.on("changelist", (cl, apps, subs) => {
 });
 
 process.on("uncaughtException", (e) => {
-	webhook.send("Uncaught exception: " + e, { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
+	webhook.send("Uncaught exception: " + e + "\n\n" + e.stack, { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 });
 
 steam.logOn(settings.steam);
