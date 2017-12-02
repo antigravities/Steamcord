@@ -75,11 +75,11 @@ discord.on("ready", () => {
 	if( steamUpdateTimeout != null ) clearInterval(steamUpdateTimeout);
 
 	steamUpdateTimeout = setInterval(() => {
-		var master = discord.users.find("id", settings.discord.master);
+		var master = masterGuild.members.find("id", settings.discord.master);
 
 		var ps;
 
-		switch(master.presence.status){
+		switch(master.user.presence.status){
 			case "online":
 				ps = Steam.Steam.EPersonaState.Online;
 				break;
@@ -94,11 +94,11 @@ discord.on("ready", () => {
 				break;
 		}
 
-		steam.setPersona(ps);
+		steam.setPersona(ps, master.displayName);
 
-		if( master.presence.game !== null ){
-			var gn = master.presence.game.name;
-			if( master.presence.streaming ) gn = "Streaming " + gn;
+		if( master.user.presence.game !== null ){
+			var gn = master.user.presence.game.name;
+			if( master.user.presence.streaming ) gn = "Streaming " + gn;
 			steam.gamesPlayed(gn);
 		} else {
 			steam.gamesPlayed([]);
@@ -233,6 +233,25 @@ discord.on("message", (msg) => {
 			if( isNaN(parseInt(mc[1])) ) return webhook.send("Invalid AppID", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 
 			return webhook.send("You do" + ( steam.ownsApp(parseInt(mc[1])) ? "" : " not" ) + " own " + mc[1] + ".", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
+		} else if( mc[0] == "b" ){
+			var uiMode = 0;
+
+			switch(mc[1]){
+				case "bigpic":
+					uiMode = 1;
+					break;
+				case "mobile":
+					uiMode = 2;
+					break;
+				case "web":
+					uiMode = 3;
+					break;
+				default:
+					uiMode = 0;
+			}
+
+			steam.setUIMode(uiMode);
+			return webhook.send("Set UI mode to " + mc[1] + ".", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 		} else {
 			msg.reply("??");
 		}

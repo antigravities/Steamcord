@@ -57,8 +57,9 @@ To run Steamcord, just `cd` into wherever you cloned or downloaded Steamcord and
 * `!a <steamid>` - Add a user as a friend on Steam
 * `!w` - Obtain your Steam Community session cookies
 * `!p` - Enable PICS notifications. This will send you new changelists for all apps.
-* `!q <appid>` - Enable PICS notifications for `<appid>`. This will send you changelists for apps that are on this list.
+* `!q <appid>` - Enable PICS notifications for `<appid>`. This will send you changelists for apps that are on this list. Persistent across reboots.
 * `!o <appid>` - Check if you own `<appid>`.
+* `!b [bigpic|mobile|web|none]` - Sets your UI mode (the icon next to your name). Set to "none" to reset. Not persistent across reboots.
 
 ## Maintainers
 
