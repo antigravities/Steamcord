@@ -4,6 +4,19 @@
 
 Steamcord is an in-development Steam to Discord interface which replaces some basic functions of the Steam client, such as messaging, friends list management, notification counts, and key redemption. It is **not** a total client replacement, but offers significant enhancements to the chat experience of Steam.
 
+Steamcord:
+
+* transmits conversations to and from Steam
+* transmits group messages to and from Steam (buggy due to Steam limitations)
+* shows PICS (game update) information
+* allows you to redeem keys and obtain free licenses
+* allows you to manage and view your friend list
+* automatically sets your Steam persona name to match the nickname you set for yourself in your Discord server
+* automatically transmits your Discord game persona to Steam
+* shows group announcements
+* notifies of new trade notifications
+* shows new comment notifications, new item notifications, wallet balance, and the latest PICS changelist (if enabled) as the #general channel's topic
+
 ## Install
 
 ### Prerequisites
