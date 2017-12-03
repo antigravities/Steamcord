@@ -91,7 +91,7 @@ function tryGetProfile(steamid){
 	try {
 		profile.name = steam.users[steamid].player_name;
 	} catch(e){
-		profile.name = sender.toString();
+		profile.name = steamid.toString();
 	}
 
 	try {
