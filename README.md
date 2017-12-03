@@ -77,6 +77,7 @@ To run Steamcord, just `cd` into wherever you cloned or downloaded Steamcord and
 * `!addlicense <appid>` - Obtain a free on demand/no cost license for `<appid>`. See [this](https://github.com/DoctorMcKay/node-steam-user#requestfreelicenseappids-callback) for more information.
 * `!join <chatid>` - Join a group chat
 * `!part <chatid>` - Leave a group chat
+* `!ncomments` - View your comment notifications
 
 ## Maintainers
 

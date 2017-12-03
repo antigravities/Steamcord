@@ -4,6 +4,11 @@ const discord = new Discord.Client();
 const Steam = require("steam-user");
 const steam = new Steam({ enablePicsCache: true, picsCacheAll: true, changelistUpdateInterval: 5000 });
 
+const Community = require("steamcommunity");
+const community = new Community();
+
+const cheerio = require("cheerio");
+
 const fs = require("fs");
 
 const settings = JSON.parse(fs.readFileSync("settings.json"));
@@ -96,6 +101,23 @@ function tryGetProfile(steamid){
 	}
 
 	return profile;
+}
+
+function ensureCommunityLoggedIn(callback){
+	community.loggedIn((err, is) => {
+		if( err ){
+			return webhook.send("Could not contact the Steam Community: " + err, {username: "Steam Community", avatarURL: "https://eet.li/7fd7e03.png"});
+		}
+
+		if( ! is ){
+			steam.once("webSession", (sessionid, cookies) => {
+				community.setCookies(cookies);
+				callback();
+			});
+
+			steam.webLogOn();
+		} else callback();
+	})
 }
 
 discord.on("ready", () => {
@@ -321,6 +343,51 @@ discord.on("message", (msg) => {
 			} catch(e){
 				return webhook.send("Could not leave that chat room: " + e);
 			}
+		} else if( mc[0] == "ncomments" ) {
+			ensureCommunityLoggedIn(() => {
+				community.request("http://steamcommunity.com/my/commentnotifications/", (e,r,b) => {
+					if( e ) return webhook.send("Could not get notifications: " + e);
+
+					var $ = cheerio.load(b);
+
+					var notifs = [];
+
+					$(".commentnotification").each((k,v) => {
+						v = $(v);
+
+						if( v.hasClass("deleted") || ! v.hasClass("unread") ) return;
+
+						var notif = "";
+
+						var title = $($(v).children()[4]).text().trim();
+						var context = $($(v).children()[5]).text().trim();
+						var link = $($($(v).children()[0]).children()[0]).attr("href");
+						var date = $($($(v).children()[2]).children()[1]).text().trim();
+
+						notifs.push(notif + title + "\n" + context + "\n" + date + " | <" + link + ">");
+					});
+
+					var msg = "";
+					var divider = "\n---\n"
+
+					if( notifs.length == 0 ) return webhook.send("No new notifications! How sad.", { username: "Comment Notifications", avatarURL: "https://eet.li/7fd7e03.png"});
+
+					notifs.forEach((v, k) => {
+						if( msg.length + v.length + divider.length > 2000 ){
+							webhook.send(msg, { username: "Comment Notifications", avatarURL: "https://eet.li/7fd7e03.png"});
+							msg = "";
+						}
+
+						msg += v;
+
+						if( k < notifs.length-1 ) msg+=divider;
+					});
+
+					webhook.send(msg, { username: "Comment Notifications", avatarURL: "https://eet.li/7fd7e03.png"});
+
+					return;
+				});
+			});
 		} else {
 			msg.reply("??");
 		}
@@ -340,6 +407,7 @@ discord.login(settings.discord.key);
 steam.on("loggedOn", () => {
 	steam.setPersona(Steam.EPersonaState.Online);
 	console.log("Logged on to Steam.");
+	ensureCommunityLoggedIn(() => {});
 });
 
 steam.on("friendMessage", (sender, message, room) => {
