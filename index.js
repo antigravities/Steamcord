@@ -163,13 +163,13 @@ discord.on("message", (msg) => {
 	if( msg.content.startsWith("!") ){
 		var mc = msg.content.slice(1).split(" ");
 
-		if( mc[0] == "p" && mc.length >= 3 ){
+		if( ( mc[0] == "pm" || mc[0] == "send" ) && mc.length >= 3 ){
 			try{
 				steam.chatMessage(mc[1], mc.slice(2).join(" "));
 			} catch (err){
 				msg.reply("that's not a valid Steam ID!");
 			}
-		} else if( mc[0] == "r" && mc.length >= 2 ){
+		} else if( mc[0] == "activate" && mc.length >= 2 ){
 			mc.slice(1).forEach((v,k) => {
 				setTimeout(() => {
 					steam.redeemKey(v, (r, d, p) => {
@@ -183,15 +183,14 @@ discord.on("message", (msg) => {
 					});
 				}, k*1000);
 			});
-		} else if( mc[0] == "a" && mc.length >= 2 ){
+		} else if( mc[0] == "add" && mc.length >= 2 ){
 			try{
 				steam.addFriend(mc[1]);
 			} catch (err){
-				msg.reply("that's not a valid Steam ID!");
-				return;
+				return webhook.send("Could not add that user: " + e, { username: "Steam Friends", avatarURL: "https://eet.li/7fd7e03.png" });
 			}
 			webhook.send("Added friend", { username: "Steam Friends", avatarURL: "https://eet.li/7fd7e03.png" });
-		} else if( mc[0] == "f" ) {
+		} else if( mc[0] == "friends" ) {
 			var friends = Object.keys(steam.myFriends);
 			var i = 0;
 			var embeds = [];
@@ -255,17 +254,17 @@ discord.on("message", (msg) => {
 			} while( friends.length > 25);
 
 			webhook.send("", {username: "Steam Friends", avatarURL: "https://eet.li/7fd7e03.png", embeds: embeds } );
-		} else if( mc[0] == "w" ) {
+		} else if( mc[0] == "websession" ) {
 			expectingWebSession=true;
 			steam.webLogOn();
-		} else if( mc[0] == "p" ) {
+		} else if( mc[0] == "pics" ) {
 			if( ! pics.enabled ) pics.enabled = true;
 			else pics.enabled = false;
 
 			fs.writeFileSync("pics.json", JSON.stringify(pics));
 
 			webhook.send("PICS updates " + (pics.enabled ? "enabled" : "disabled") + ".", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png" });
-		} else if( mc[0] == "q" ) {
+		} else if( mc[0] == "picsadd" ) {
 			if( isNaN(parseInt(mc[1])) ) return webhook.send("Invalid AppID", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png"});
 
 			var l = parseInt(mc[1]);
@@ -276,12 +275,12 @@ discord.on("message", (msg) => {
 			fs.writeFileSync("pics.json", JSON.stringify(pics));
 
 			webhook.send(((pics.apps.indexOf(l)) < 0 ? "No longer" : "Now") + " monitoring " + mc[1] + ".", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png"});
-		} else if( mc[0] == "o" ){
+		} else if( mc[0] == "own" ){
 			if( ! safeAppCall ) return webhook.send("Please wait one moment while Steamcord retrieves your apps.", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 			if( isNaN(parseInt(mc[1])) ) return webhook.send("Invalid AppID", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 
 			return webhook.send("You do" + ( steam.ownsApp(parseInt(mc[1])) ? "" : " not" ) + " own " + mc[1] + ".", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
-		} else if( mc[0] == "b" ){
+		} else if( mc[0] == "ui" ){
 			var uiMode = 0;
 
 			switch(mc[1]){
@@ -300,7 +299,7 @@ discord.on("message", (msg) => {
 
 			steam.setUIMode(uiMode);
 			return webhook.send("Set UI mode to " + mc[1] + ".", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
-		} else if( mc[0] == "l" ){
+		} else if( mc[0] == "addlicense" ){
 			if( isNaN(parseInt(mc[1])) ) return webhook.send("Please specify a valid AppID to request a free on demand/no cost license for.", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png" });
 
 			steam.requestFreeLicense(parseInt(mc[1]), (err, subs, apps) => {
@@ -308,7 +307,7 @@ discord.on("message", (msg) => {
 
 				return webhook.send("OK! You were granted subscription(s) " + subs.join(",") + " which contained app(s) " + apps.join(","), { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 			});
-		} else if( mc[0] == "j" ){
+		} else if( mc[0] == "join" ){
 			try {
 				steam.joinChat(mc[1], (res) => {
 					if( res != Steam.EResult.OK ) return webhook.send("Could not join that chat room: " + resolveCode(Steam.EResult, res));
@@ -316,7 +315,7 @@ discord.on("message", (msg) => {
 			} catch(e){
 				return webhook.send("Could not join that chat room: " + e);
 			}
-		} else if( mc[0] == "m" ){
+		} else if( mc[0] == "part" ){
 			try {
 				steam.leaveChat(mc[1]);
 			} catch(e){
@@ -521,6 +520,12 @@ steam.on("changelist", (cl, apps, subs) => {
 			webhook.send(msg, { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png" });
 		});
 	}
+});
+
+steam.on("lobbyInvite", (sender, lobby) => {
+	var profile = tryGetProfile(sender);
+
+	sendMessageAs(sender, profile.name + " has invited you to play " + steam.users[sender].game_name + ". Click to join: steam://joinlobby/" + steam.users[sender].gameid + "/" + lobby + "/" + sender);
 });
 
 process.on("uncaughtException", (e) => {

@@ -63,19 +63,19 @@ To run Steamcord, just `cd` into wherever you cloned or downloaded Steamcord and
 
 **NOTE:** Commands must be run from the `#general` text channel, not in a chat channel.
 
-* `!p <steamid> <message>` - Begin a conversation with someone
+* `!pm <steamid> <message>` - Begin a conversation with someone
   * If you already have a conversation open with the user you want to talk to, just send a message in the channel with their Steam ID as its name. This command is only for initiating new conversations with users.
-* `!f` - Display your friends list
-* `!r <steamkey>` - Redeem a Steam CD key
-* `!a <steamid>` - Add a user as a friend on Steam
-* `!w` - Obtain your Steam Community session cookies
-* `!p` - Enable PICS notifications. This will send you new changelists for all apps.
-* `!q <appid>` - Enable PICS notifications for `<appid>`. This will send you changelists for apps that are on this list. Persistent across reboots.
-* `!o <appid>` - Check if you own `<appid>`.
-* `!b [bigpic|mobile|web|none]` - Sets your UI mode (the icon next to your name). Set to "none" to reset. Not persistent across reboots.
-* `!l <appid>` - Obtain a free on demand/no cost license for `<appid>`. See [this](https://github.com/DoctorMcKay/node-steam-user#requestfreelicenseappids-callback) for more information.
-* `!j <chatid>` - Join a group chat
-* `!m <chatid>` - Leave a group chat
+* `!friends` - Display your friends list
+* `!activate <steamkey>` - Redeem a Steam CD key
+* `!add <steamid>` - Add a user as a friend on Steam
+* `!websession` - Obtain your Steam Community session cookies
+* `!pics` - Enable PICS notifications. This will send you new changelists for all apps.
+* `!picsadd <appid>` - Enables or disables PICS notifications for `<appid>`. This will send you changelists for apps that are on this list. Persistent across reboots.
+* `!own <appid>` - Check if you own `<appid>`.
+* `!ui [bigpic|mobile|web|none]` - Sets your UI mode (the icon next to your name). Set to "none" to reset. Not persistent across reboots.
+* `!addlicense <appid>` - Obtain a free on demand/no cost license for `<appid>`. See [this](https://github.com/DoctorMcKay/node-steam-user#requestfreelicenseappids-callback) for more information.
+* `!join <chatid>` - Join a group chat
+* `!part <chatid>` - Leave a group chat
 
 ## Maintainers
 
