@@ -410,7 +410,7 @@ steam.on("appOwnershipCached", () => {
 
 steam.on("tradeRequest", (sender, respond) => {
 	var profile = tryGetProfile(sender);
-	sendMessageAs(sender, "\*\* " + sender.name + " sent a trade request.");
+	sendMessageAs(sender, "\*\* " + profile.name + " sent a trade request.");
 });
 
 steam.on("groupAnnouncement", (sender, headline, gid) => {
