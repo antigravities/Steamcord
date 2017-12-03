@@ -264,7 +264,7 @@ discord.on("message", (msg) => {
 			fs.writeFileSync("pics.json", JSON.stringify(pics));
 
 			webhook.send("PICS updates " + (pics.enabled ? "enabled" : "disabled") + ".", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png" });
-		} else if( mc[0] == "picsadd" ) {
+		} else if( mc[0] == "picsadd" && mc.length >= 2 ) {
 			if( isNaN(parseInt(mc[1])) ) return webhook.send("Invalid AppID", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png"});
 
 			var l = parseInt(mc[1]);
@@ -275,7 +275,7 @@ discord.on("message", (msg) => {
 			fs.writeFileSync("pics.json", JSON.stringify(pics));
 
 			webhook.send(((pics.apps.indexOf(l)) < 0 ? "No longer" : "Now") + " monitoring " + mc[1] + ".", { username: "PICS", avatarURL: "https://eet.li/7fd7e03.png"});
-		} else if( mc[0] == "own" ){
+		} else if( mc[0] == "own" && mc.length >=2 ){
 			if( ! safeAppCall ) return webhook.send("Please wait one moment while Steamcord retrieves your apps.", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 			if( isNaN(parseInt(mc[1])) ) return webhook.send("Invalid AppID", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 
@@ -299,7 +299,7 @@ discord.on("message", (msg) => {
 
 			steam.setUIMode(uiMode);
 			return webhook.send("Set UI mode to " + mc[1] + ".", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
-		} else if( mc[0] == "addlicense" ){
+		} else if( mc[0] == "addlicense" && mc.length >= 2){
 			if( isNaN(parseInt(mc[1])) ) return webhook.send("Please specify a valid AppID to request a free on demand/no cost license for.", { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png" });
 
 			steam.requestFreeLicense(parseInt(mc[1]), (err, subs, apps) => {
@@ -307,7 +307,7 @@ discord.on("message", (msg) => {
 
 				return webhook.send("OK! You were granted subscription(s) " + subs.join(",") + " which contained app(s) " + apps.join(","), { username: "Steamcord", avatarURL: "https://eet.li/7fd7e03.png"});
 			});
-		} else if( mc[0] == "join" ){
+		} else if( mc[0] == "join" && mc.length >= 2 ){
 			try {
 				steam.joinChat(mc[1], (res) => {
 					if( res != Steam.EResult.OK ) return webhook.send("Could not join that chat room: " + resolveCode(Steam.EResult, res));
@@ -315,7 +315,7 @@ discord.on("message", (msg) => {
 			} catch(e){
 				return webhook.send("Could not join that chat room: " + e);
 			}
-		} else if( mc[0] == "part" ){
+		} else if( mc[0] == "part" && mc.length >= 2){
 			try {
 				steam.leaveChat(mc[1]);
 			} catch(e){

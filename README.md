@@ -16,6 +16,7 @@ Steamcord:
 * shows group announcements
 * notifies of new trade notifications
 * shows new comment notifications, new item notifications, wallet balance, and the latest PICS changelist (if enabled) as the #general channel's topic
+* shows game invites
 
 ## Install
 
