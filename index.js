@@ -392,7 +392,10 @@ discord.on("message", (msg) => {
 			msg.reply("??");
 		}
 	} else {
-		if( msg.channel.name != "general" ) steam.chatMessage(msg.channel.name, msg.content);
+		if( msg.channel.name != "general" ) {
+			let attachmentsStr = msg.attachments.reduce((acc, attachment) => (acc + "\n" + attachment.url), "");
+			steam.chatMessage(msg.channel.name, msg.content + attachmentsStr);
+		}
 	}
 });
 
