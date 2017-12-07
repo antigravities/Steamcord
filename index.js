@@ -393,7 +393,7 @@ discord.on("message", (msg) => {
 		}
 	} else {
 		if( msg.channel.name != "general" ) {
-			let attachmentsStr = msg.attachments.reduce((acc, attachment) => (acc + "\n" + attachment.url), "");
+			let attachmentsStr = msg.attachments.reduce((acc, attachment) => (acc + "\n" + attachment.url), " ");
 			steam.chatMessage(msg.channel.name, msg.content + attachmentsStr);
 		}
 	}
