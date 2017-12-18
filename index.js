@@ -401,6 +401,7 @@ discord.on("message", (msg) => {
 
 discord.on("typingStart", (chan, user) => {
 	if( chan.name == "general" ) return;
+	if( user.id !== settings.discord.master ) return;
 
 	steam.chatTyping(chan.name);
 });
