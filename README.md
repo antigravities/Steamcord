@@ -1,6 +1,8 @@
 # Steamcord
 
-> Steam to Discord. Because Steam's social features are genetically inferior.
+> Steam to Discord. Because Steam's social features are inferior.
+
+## Development has moved to [antigravities/Steamcord2](https://github.com/antigravities/Steamcord2), use that instead
 
 Steamcord is an in-development Steam to Discord interface which replaces some basic functions of the Steam client, such as messaging, friends list management, notification counts, and key redemption. It is **not** a total client replacement, but offers significant enhancements to the chat experience of Steam.
 
